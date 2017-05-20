@@ -1,0 +1,14 @@
+(?<=POST_CONTENT = """)[\s\S](?="""\/POST_CONTENT)    ***THIS PHRASE WILL GRAB EVERYTHING IN BETWEEN THE TWO = STATEMENTS
+
+POST_CONTENT = """
+Like this story and want to be notified when a story is posted?
+
+Reply with: Subscribe: /{username}
+
+Already tired of the author?
+
+Reply with: Unsubscribe: /{username}
+_____
+Don't want to admit your like or dislike to the community? [click here](http://www.reddit.com/message/compose/?to=HFYsubs&subject=subscribe&message=subscribe%20/u/{username}) and send the same message.
+"""/POST_CONTENT
+

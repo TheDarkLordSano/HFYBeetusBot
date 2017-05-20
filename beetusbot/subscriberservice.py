@@ -9,16 +9,10 @@ import re
 import praw
 import time
 import requests
-user_regex = re.compile('\/u\/([A-Za-z0-9_-]{1,})') #user regex
-
-class MockStory(): #I guess I should remove this
-    def __init__(self, author, title, url):
-        self.author = author
-        self.title = title
-        self.url = url
+user_regex = re.compile('\/([A-Za-z0-9_-]{1,})') #user regex
 
 def get_new_messages(redd):
-    return redd.get_unread(limit=None)
+    return redd.inbox.unread(limit=None)
 
 def extract_users(message):
     return user_regex.findall(message)
@@ -34,10 +28,20 @@ def construct_pm(author, subscriptions):
         return config.SUBSCRIPTION_CONTENT.format(username=author,
                                                   text="You don't have any subscriptions")
 
-def do_reply(message):
+def do_reply(message, redd):
     print "Sending pm to %s about their subscriptions" % message.author
-    message.reply(construct_pm(message.author, config.get_subscriptions(message.author)))
-    message.mark_as_read()
+    pmed = False
+    while not pmed:
+        try:
+            redd.redditor(unicode(message.author)).message("Subscription update",construct_pm(message.author, config.get_subscriptions(message.author)))
+            pmed = True
+        except praw.exceptions.APIException, requests.exceptions.HTTPError:
+            print "503 error or something, sleeping for 60 seconds"
+            time.sleep(60)
+        except:
+            print "Unknown error: ", sys.exc_info()[0], sys.exc_info()[1]
+            time.sleep(60)
+    message.mark_read()
 
 def reply_list(message, users):
     print "Sending pm to %s because (s)he requested a list from %s" % (message.author, users) 
@@ -57,20 +61,29 @@ def send_notifications(story, reddit):
         print "Sending message to %s about a new story from %s" % (subscriber, story.author)
         while not pmed:
             try:
-                message = config.NEW_STORY_CONTENT.format(username=subscriber,
+		if(subscriber.lower() in config.stalkers):
+		    messe = config.STALKER_NEW_CONTENT.format(username=subscriber,
                                                             writer=story.author,
                                                             title=story.title,
                                                             url=story.url.encode('utf8')
                                                             )
-                reddit.send_message(subscriber, "There's a new story for you!", message)
+		else:
+		    messe = config.NEW_STORY_CONTENT.format(username=subscriber,
+                                                            writer=story.author,
+                                                            title=story.title,
+                                                            url=story.url.encode('utf8')
+                                                            )
+                reddit.redditor(subscriber).message("There's a new story for you!", messe)
                 pmed = True
-            except praw.errors.InvalidUser: #catch incase user subscribes and then deletes the account.
-                print "User %s doesn't exist anymore, removing from list!" % subscriber
-                config.remove_subscription(story.author, subscriber)
-                pmed = True
-            except praw.errors.RateLimitExceeded, requests.exceptions.HTTPError:
-                print "503 error or something, sleeping for 60 seconds"
-                time.sleep(60)
+            except praw.exceptions.APIException, err:
+                if hasattr(err, "error_type") and err.error_type == 'InvalidUser':
+                    print "User %s doesn't exist anymore, removing from list!" % subscriber 
+                    #catch incase user subscribes and then deletes the account.
+                    config.remove_subscription(story.author, subscriber)
+                    pmed = True
+                elif hasattr(err, "error_type") and err.error_type == 'RATELIMIT':
+                    print "503 error or something, sleeping for 60 seconds"
+                    time.sleep(60)
             except:
                 print "Unknown error: ", sys.exc_info()[0]
                 time.sleep(60)
@@ -79,16 +92,20 @@ def send_notifications(story, reddit):
 def run(redd):
     new_messages = get_new_messages(redd)
     for message in new_messages:
-        if hasattr(message, 'context') and message.context is not None and len(message.context) > 2:
-            continue #is a comment reply, ignore
+
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
             for user in extract_users(message.body):
                 print "Removing subscription from %s to %s" % (user, message.author)
                 config.remove_subscription(user, message.author)
                 
-            do_reply(message)
+            do_reply(message, redd)
         elif "subscribe" in message.body.lower() or "subscribe" in message.subject.lower():
             for user in extract_users(message.body):
-                print "Added subscription from %s to %s" % (user, message.author)
-                config.add_subscription(user, message.author)
-            do_reply(message)
+#		print "Testing %s" % user
+		if user.lower() == 'u':
+                    continue
+                else:
+                    print "Added subscription from %s to %s" % (user, message.author)
+                    config.add_subscription(user, message.author)
+            do_reply(message, redd)
+

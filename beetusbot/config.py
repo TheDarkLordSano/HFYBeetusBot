@@ -1,23 +1,30 @@
 '''
 Created on Oct 5, 2013
-SHOULD PROBABLY CHANGE THIS TO SOME NICE ORM AND STUFF
-PLS FIX
-
 @author: Chris
+Edited 4/24/2015 
+@additions: TheDarkLordSano
 '''
-import MySQLdb
+import sqlite3
 
-SUBREDDIT = "FatPeopleStories"
+SUBREDDIT = "HFY"
 POST_CONTENT = """
-Other stories from /u/{username}:
+Like this story and want to be notified when a story is posted?
 
-{text}
+Reply with: Subscribe: /{username}
 
+Already tired of the author?
+
+Reply with: Unsubscribe: /{username}
 _____
-^If ^you ^want ^to ^get ^notified ^as ^soon ^as ^{username} ^posts ^a ^new ^story, [^click ^here](http://www.reddit.com/message/compose/?to=BeetusBot&subject=subscribe&message=subscribe%20/u/{username})^.
+Don't want to admit your like or dislike to the community? [click here](http://www.reddit.com/message/compose/?to=HFYsubs&subject=subscribe&message=subscribe%20/u/{username}) and send the same message.
+_____
+If I'm broke Contact user 'TheDarkLordSano' via PM or IRC.  
+____
+[I have a wiki page](https://www.reddit.com/r/HFY/wiki/tools/hfysubs)
+____
 
-^(Hi I'm BeetusBot, for more info about me go to /r/beetusbot)
-"""# pls replace the ^'s with one ^() and test it
+UPGRADES IN PROGRESS. REQUIRES MORE VESPENE GAS.
+"""
 
 SUBSCRIPTION_CONTENT = """
 Hello there {username}! You are now subscribed to the following users:
@@ -26,6 +33,10 @@ Hello there {username}! You are now subscribed to the following users:
 
 _____
 ^(To unsubscribe to any of these users, send a message that contains the word unsubscribe and a list of users, for example: unsubscribe /u/username /u/username2)
+_____
+If I'm broke Contact user 'TheDarkLordSano' via PM or IRC.
+
+[I have a wiki page](https://www.reddit.com/r/HFY/wiki/tools/hfysubs)
 """
 
 NEW_STORY_CONTENT = """
@@ -37,20 +48,40 @@ Hello {username}!
 
 _____
 ^(To unsubscribe, send a message that contains the word unsubscribe and a list of users, for example: unsubscribe /u/username /u/username2)
+_____
+If I need to be bound and taught a lesson please contact 'TheDarkLordSano'. He Ties the knots just right.
 """
 
-IGNORE = ["f2f", "fat2fit", "meta", "titp", "[tp]"]
-FOOTER_TEXT = "Hi im BeetusBot" #not used?
-USERNAME = "BeetusBot"
-PASSWORD = ""
+STALKER_NEW_CONTENT = """
+Oh hello there {username},
+ 
+It appears that someone we have been stalking together has posted something new.
+ 
+/u/{writer} has posted something [scandalous]({url}).
 
-DATABASE_HOST = ""
-DATABASE_USER = ""
-DATABASE_PASS = ""
-DATABASE_DB = ""
+[I have a wiki page](https://www.reddit.com/r/HFY/wiki/tools/hfysubs)
+"""
+
+IGNORE = ["Meta","meta","wp","video","text","misc","none","[Meta]","[WP]","[WPW]","[misc]","[MISC]","[video]","[text]"]
+stalkers= ["fineillstoplurking","j1xwnbsr","someguynamedted","dejers","nine_tailed_smthng"]
+#USERNAME = ""
+#PASSWORD = ""
+
+
+DATABASE = 'subs.db'
+
+print('Loading SQL database')
+sql = sqlite3.connect(DATABASE)
+print('Connected to SQL database')
+cur = sql.cursor()
+cur.execute('CREATE TABLE IF NOT EXISTS `notifications` (`id` int AUTO_INCREMENT PRIMARY KEY,`reddit_id` varchar(20) NOT NULL,`done` int(11) NOT NULL DEFAULT `0`)')
+cur.execute('CREATE TABLE IF NOT EXISTS `repliedto` (`id` int AUTO_INCREMENT PRIMARY KEY,`reddit_id` varchar(10) NOT NULL,`user` varchar(50) NOT NULL,`replied_id` varchar(10) NOT NULL,`timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,`sub` varchar(50) NOT NULL DEFAULT `HFY`)')
+cur.execute('CREATE TABLE IF NOT EXISTS `subscriptions` (`subscription_id` int AUTO_INCREMENT ,`subscribed_to` varchar(80) NOT NULL,`subscriber` varchar(80) NOT NULL,`subreddit` varchar(200) NOT NULL,`subscribe_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY (`subscription_id`),UNIQUE (`subscribed_to`,`subscriber`,`subreddit`))')
+sql.commit()
+sql.close()
 
 def connect(): #connecting for every query? wow..
-    db_connection = MySQLdb.connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS, DATABASE_DB)
+    db_connection = sqlite3.connect(DATABASE)
     return db_connection
 
 def get_latest():
@@ -114,7 +145,7 @@ def get_subscriptions(subscriber):
 def get_subscribers(writer):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT subscriber FROM subscriptions WHERE subscribed_to="%s"' % writer)
+    cursor.execute('SELECT subscriber FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE' % writer)
     items = cursor.fetchall()
     db_connection.close()
     return items
@@ -123,7 +154,7 @@ def remove_subscription(writer, subscriber):
     db_connection = connect()
     cursor = db_connection.cursor()
     try:
-        cursor.execute('DELETE FROM subscriptions WHERE subscribed_to="%s" AND subscriber="%s" AND subreddit="fatpeoplestories"' % (writer, subscriber))
+        cursor.execute('DELETE FROM subscriptions WHERE subscribed_to="%s" AND subscriber="%s" AND subreddit="%s" COLLATE NOCASE' % (writer, subscriber, SUBREDDIT))
         db_connection.commit()
     except:
         print "Something went wrong when removing subscription to the database. Subscription possibly doesn't exists."
@@ -134,9 +165,10 @@ def add_subscription(writer, subscriber):
     db_connection = connect()
     cursor = db_connection.cursor()
     try:
-        cursor.execute('INSERT INTO subscriptions(subscribed_to, subscriber, subreddit) VALUES("%s", "%s", "FatPeopleStories")' % (writer, subscriber))
+        cursor.execute('INSERT INTO subscriptions(subscribed_to, subscriber, subreddit) VALUES("%s", "%s", "%s")' % (writer, subscriber, SUBREDDIT))
         db_connection.commit()
     except:
         print "Something went wrong when adding subscription to the database. Subscription possibly already exists."
+        print "writer: %s subscriber: %s subreddit: %s" % (writer, subscriber, SUBREDDIT)
         db_connection.rollback()
     db_connection.close()
