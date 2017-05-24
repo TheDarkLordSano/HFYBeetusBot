@@ -52,7 +52,7 @@ then
 	exit 1
 fi
 
-PS3='How should beetusbot start? '
+PS3='How should HFYSubs bot start? '
 option_1="Run both the subscription service and the bot"
 option_2="Run the bot"
 option_3="Run the subscription service"

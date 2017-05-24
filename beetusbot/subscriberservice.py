@@ -2,6 +2,10 @@
 Created on 21 okt. 2013
 
 @author: Chris
+
+@Butcherer: TheDarkLordSano
+
+@Nitpicker: Bontrose
 '''
 import sys
 import config

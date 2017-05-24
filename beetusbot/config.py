@@ -3,6 +3,7 @@ Created on Oct 5, 2013
 @author: Chris
 Edited 4/24/2015 
 @additions: TheDarkLordSano
+@SQL_butchery: Bontrose
 '''
 import sqlite3
 
@@ -137,7 +138,8 @@ def add_post(parent, user, reply_id):
 def get_subscriptions(subscriber):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT subscribed_to FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to' % subscriber)
+    cursor.execute('SELECT \'/u/\' + subscribed_to FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to' % subscriber)
+	#May have to do SELECT \'/u/\' +  + CAST(subscribed_to as varchar(20) FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to'
     items = cursor.fetchall()
     db_connection.close()
     return items
@@ -145,7 +147,8 @@ def get_subscriptions(subscriber):
 def get_subscribers(writer):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT subscriber FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE' % writer)
+    cursor.execute('SELECT \'/u/\' + subscriber FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE' % writer)
+	#may have to do SELECT \'/u/\' + CAST(subscriber as varchar(20) FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE
     items = cursor.fetchall()
     db_connection.close()
     return items
