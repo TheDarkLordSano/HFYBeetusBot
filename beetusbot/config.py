@@ -72,6 +72,7 @@ DATABASE = 'subs.db'
 
 BROKER = 'pyamqp://guest@localhost//'
 WRITE_POST_RATE_LIMIT = '10/m'
+WRITE_PM_RATE_LIMIT = '10/m'
 
 print('Loading SQL database')
 sql = sqlite3.connect(DATABASE)
@@ -173,5 +174,16 @@ def add_subscription(writer, subscriber):
     except:
         print "Something went wrong when adding subscription to the database. Subscription possibly already exists."
         print "writer: %s subscriber: %s subreddit: %s" % (writer, subscriber, SUBREDDIT)
+        db_connection.rollback()
+    db_connection.close()
+
+def clear_subscriptions(subscriber):
+    db_connection = connect()
+    cursor = db_connection.cursor()
+    try:
+        cursor.execute('DELETE FROM subscriptions WHERE subscriber="%s" AND subreddit="%s" COLLATE NOCASE' % (subscriber, SUBREDDIT))
+        db_connection.commit()
+    except:
+        print "Something went wrong when removing subscription to the database. Subscription possibly doesn't exists."
         db_connection.rollback()
     db_connection.close()
