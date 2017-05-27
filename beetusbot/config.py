@@ -138,8 +138,8 @@ def add_post(parent, user, reply_id):
 def get_subscriptions(subscriber):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT \'/u/\' + subscribed_to FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to' % subscriber)
-	#May have to do SELECT \'/u/\' +  + CAST(subscribed_to as varchar(20) FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to'
+    cursor.execute('SELECT \'/u/\' +  + CAST(subscribed_to as varchar(20) FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to' % subscriber)
+	#SELECT \'/u/\' + subscribed_to FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to failed
     items = cursor.fetchall()
     db_connection.close()
     return items
@@ -147,8 +147,9 @@ def get_subscriptions(subscriber):
 def get_subscribers(writer):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT \'/u/\' + subscriber FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE' % writer)
-	#may have to do SELECT \'/u/\' + CAST(subscriber as varchar(20) FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE
+    cursor.execute('SELECT \'/u/\' + CAST(subscriber as varchar(20) FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE' % writer)
+	#may have to do 
+	#SELECT \'/u/\' + subscriber FROM subscriptions WHERE subscribed_to="%s" COLLATE NOCASE failed
     items = cursor.fetchall()
     db_connection.close()
     return items
