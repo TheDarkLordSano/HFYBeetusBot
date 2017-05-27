@@ -10,9 +10,7 @@ clone the repository:
 
 make sure you have the required python dependecies with pip
 
-	# pip install praw
-	# pip install mysql-python
-
+	# pip install -r requirements.txt
 Now go to "start the bot" to learn how to start it
 
 ### Compatibility

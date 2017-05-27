@@ -137,7 +137,7 @@ def add_post(parent, user, reply_id):
 def get_subscriptions(subscriber):
     db_connection = connect()
     cursor = db_connection.cursor()
-    cursor.execute('SELECT subscribed_to FROM subscriptions WHERE subscriber="%s"' % subscriber)
+    cursor.execute('SELECT subscribed_to FROM subscriptions WHERE subscriber="%s" ORDER BY subscribed_to' % subscriber)
     items = cursor.fetchall()
     db_connection.close()
     return items
