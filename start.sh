@@ -26,35 +26,35 @@ function logpython(){
 	echo "--------------" >> $LOG_FILE
 }
 
-function runBot(){
+function runStreamHandler(){
 	logpython $DIR/main.py
 }
-function runSubscription(){
-	logpython $DIR/subscription.py
+function runCelery(){
+	celery multi start 5 -A hfysubs -l info --logfile=$DIR/beetuslog/celery_%n%I.log
 }
-function runBotAndSubscription(){
-	runBot
-	runSubscription
+function runStreamAndCelery(){
+	runStreamHandler
+	runCelery
 }
 
 # read the first argument to see if user already made up his mind
-if [ "$1" = "bot" ]
+if [ "$1" = "stream" ]
 then
-	runBot
+	runStreamHandler
 	exit 1
-elif [ "$1" = "subscription" ]
+elif [ "$1" = "celery" ]
 then
-	runSubscription
+	runCelery
 	exit 1
 elif [ "$1" = "both" ]
 then
-	runBotAndSubscription
+	runStreamAndCelery
 	exit 1
 fi
 
 PS3='How should beetusbot start? '
 option_1="Run both the subscription service and the bot"
-option_2="Run the bot"
+option_2="Run the stream handler"
 option_3="Run the subscription service"
 option_4="Quit"
 options=("$option_1" "$option_2" "$option_3" "$option_4")
@@ -62,15 +62,15 @@ select opt in "${options[@]}"
 do
     case $opt in
         $option_1)
-			runBotAndSubscription
+			runStreamAndCelery
 			break
             ;;
         $option_2)
-			runBot
+			runStreamHandler
 			break
             ;;
         $option_3)
-			runSubscription
+			runCelery
 			break
             ;;
         $option_4)
