@@ -2,10 +2,10 @@ from __future__ import absolute_import, unicode_literals
 from celery import Celery, Task
 
 from .reddit import make_reddit
+from .settings import BROKER
 
 app = Celery('hfysubs',
-             broker='amqp://',
-             backend='amqp://',
+             broker=BROKER,
              include=['hfysubs.tasks'])
 
 # Optional configuration, see the application user guide.
