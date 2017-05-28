@@ -71,8 +71,8 @@ stalkers= ["fineillstoplurking","j1xwnbsr","someguynamedted","dejers","nine_tail
 DATABASE = 'subs.db'
 
 BROKER = 'pyamqp://guest@localhost//'
-WRITE_POST_RATE_LIMIT = '10/m'
-WRITE_PM_RATE_LIMIT = '10/m'
+WRITE_POST_RATE_LIMIT = '60/m'
+WRITE_PM_RATE_LIMIT = '60/m'
 
 print('Loading SQL database')
 sql = sqlite3.connect(DATABASE)
