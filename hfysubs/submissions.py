@@ -9,10 +9,7 @@ from .util import filter_post
 def handle_subscription_stream():
     subreddit = make_reddit().subreddit(config.SUBREDDIT)
 
-    latest = config.get_latest()
-
     for submission in subreddit.stream.submissions():
-        check = filter_post(submission)
-        if submission.id != latest and check and submission.author is not None:
-            if submission.author is None:  # wat? oh when a user deletes itself as author right away
-                process_submission(submission)
+        # author may be None when a user deletes itself as author right away
+        if filter_post(submission) and submission.author is not None:
+            process_submission(submission)
