@@ -22,14 +22,14 @@ def process_submission(submission):
         return
 
     for story in all_stories:
-        previous_id = config.get_post_in_thread(story.id)
+        previous_id = config.get_post_in_thread(story.id)  #checks if the story is already in the 'repliedto' database.
 
-        if not previous_id:
-            if story.id == submission.id:
-                queue_notifications(submission)
-
-            post = config.POST_CONTENT.format(username=submission.author.name)
-            write_post(story.id, post, submission.author.name)
+        if not previous_id:   #If the story is not in the 'repliedto' database
+            if story.id == submission.id:  #Is the place in the loop we are at the story that started this?
+                queue_notifications(submission)   #Time to send people the notification.
+				
+            post = config.POST_CONTENT.format(username=submission.author.name)  
+            write_post(story.id, post, submission.author.name)  #submit a reply on the story, write_post adds story to 'repliedto' database
 
 
 @app.task

@@ -48,8 +48,8 @@ def handle_inbox_stream():
 def construct_pm(author, subscriptions):
     subscriptions = [subscription[0] for subscription in subscriptions]
     if len(subscriptions) >= 1:
-        subscriptions[0] = "* " + subscriptions[0]
-        userlist = "\n\n* ".join(subscriptions)
+        subscriptions[0] = "* /u/" + subscriptions[0]
+        userlist = "\n\n* /u/".join(subscriptions)
 
         return config.SUBSCRIPTION_CONTENT.format(
             username=author,
