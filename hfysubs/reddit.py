@@ -10,6 +10,5 @@ def make_reddit():
         client_id=account.CLIENT_ID,
         client_secret=account.CLIENT_SECRET,
         refresh_token=account.reftoken,
-        user_agent='HFY Subscriptions contact /u/TheDarkLordSano',
-        username='TheDarkLordSano'
+        user_agent='HFYSubs by /u/TheDarkLordSano'
     )

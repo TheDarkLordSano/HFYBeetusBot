@@ -2,10 +2,10 @@ from __future__ import absolute_import, unicode_literals
 from celery import Celery, Task
 
 from .reddit import make_reddit
-from .settings import BROKER
+#from .settings import BROKER  #Seems to error on trying to find this.... ImportError: NO Module named settings hardcoding as a workaround for testing purposes
 
 app = Celery('hfysubs',
-             broker=BROKER,
+             broker='pyamqp://guest@localhost//',
              include=['hfysubs.tasks'])
 
 # Optional configuration, see the application user guide.
