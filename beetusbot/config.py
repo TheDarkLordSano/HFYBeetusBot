@@ -52,20 +52,7 @@ _____
 If I need to be bound and taught a lesson please contact 'TheDarkLordSano'. He Ties the knots just right.
 """
 
-STALKER_NEW_CONTENT = """
-Oh hello there {username},
- 
-It appears that someone we have been stalking together has posted something new.
- 
-/u/{writer} has posted something [scandalous]({url}).
-
-[I have a wiki page](https://www.reddit.com/r/HFY/wiki/tools/hfysubs)
-"""
-
 IGNORE = ["Meta","meta","wp","video","text","misc","none","[Meta]","[WP]","[WPW]","[misc]","[MISC]","[video]","[text]"]
-stalkers= ["fineillstoplurking","j1xwnbsr","someguynamedted","dejers","nine_tailed_smthng"]
-#USERNAME = ""
-#PASSWORD = ""
 
 
 DATABASE = 'subs.db'

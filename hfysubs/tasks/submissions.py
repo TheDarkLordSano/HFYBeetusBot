@@ -37,19 +37,11 @@ def queue_notifications(submission):
     subscribers = config.get_subscribers(submission.author)
 
     for subscriber in subscribers:
-        if subscriber.lower() in config.stalkers:
-            message = config.STALKER_NEW_CONTENT.format(
-                username=subscriber,
-                writer=submission.author,
-                title=submission.title,
-                url=submission.url.encode('utf8')
-            )
-        else:
-            message = config.NEW_submission_CONTENT.format(
-                username=subscriber,
-                writer=submission.author,
-                title=submission.title,
-                url=submission.url.encode('utf8')
-            )
-
-        send_message(subscriber, "There's a new story for you!", message)
+	subber = subscriber[0]  #this is to get rid of the tuple
+        message = config.NEW_STORY_CONTENT.format(
+           username=subber,
+           writer=submission.author,
+           title=submission.title,
+           url=submission.url.encode('utf8')
+        )
+        send_message(subber, "There's a new story for you!", message)
