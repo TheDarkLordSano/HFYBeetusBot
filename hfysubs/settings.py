@@ -1,0 +1,2 @@
+
+BROKER = 'pyamqp://guest@localhost//'

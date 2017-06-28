@@ -110,3 +110,4 @@ account.pickle
 Authent.ini
 *.pickle
 *.pyc
+hfysubs/inboxhack.py

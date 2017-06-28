@@ -23,7 +23,7 @@ ____
 [I have a wiki page](https://www.reddit.com/r/HFY/wiki/tools/hfysubs)
 ____
 
-UPGRADES IN PROGRESS. REQUIRES MORE VESPENE GAS.
+Your messages are getting through. The script that checks the inbox has to be manually run. 'TheDarkLordSano' is aware and working on a solution.
 """
 
 SUBSCRIPTION_CONTENT = """

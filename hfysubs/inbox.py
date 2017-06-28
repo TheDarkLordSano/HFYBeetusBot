@@ -20,12 +20,12 @@ def handle_inbox_stream():
     for message in make_reddit().inbox.stream():
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
             for user in extract_users(message.body):
-                logger.info("Removing subscription from %s to %s" % (user, message.author))
+                print("Removing subscription from %s to %s" % (user, message.author))
                 config.remove_subscription(user, message.author)
 
-            send_message(
-                message.author,
-                "Subscription update",
+            send_message.delay(
+                str(message.author),
+                "Your Current Subscriptions",
                 construct_pm(message.author, config.get_subscriptions(message.author))
             )
         elif "subscribe" in message.body.lower() or "subscribe" in message.subject.lower():
@@ -33,12 +33,12 @@ def handle_inbox_stream():
                 if user.lower() == 'u':
                     continue
                 else:
-                    logger.info("Added subscription from %s to %s" % (user, message.author))
+                    print("Added subscription from %s to %s" % (user, message.author))
                     config.add_subscription(user, message.author)
 
-            send_message(
-                message.author,
-                "Subscription update",
+            send_message.delay(
+                str(message.author),
+                "Your Current Subscriptions",
                 construct_pm(message.author, config.get_subscriptions(message.author))
             )
 

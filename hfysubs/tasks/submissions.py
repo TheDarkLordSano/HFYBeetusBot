@@ -26,10 +26,10 @@ def process_submission(submission):
 
         if not previous_id:   #If the story is not in the 'repliedto' database
             if story.id == submission.id:  #Is the place in the loop we are at the story that started this?
-                queue_notifications(submission)   #Time to send people the notification.
+                queue_notifications(submission)  #Time to send people the notification.
 				
             post = config.POST_CONTENT.format(username=submission.author.name)  
-            write_post(story.id, post, submission.author.name)  #submit a reply on the story, write_post adds story to 'repliedto' database
+            write_post.delay(story.id, post, submission.author.name)  #submit a reply on the story, write_post adds story to 'repliedto' database
 
 
 @app.task
@@ -41,7 +41,7 @@ def queue_notifications(submission):
         message = config.NEW_STORY_CONTENT.format(
            username=subber,
            writer=submission.author,
-           title=submission.title,
-           url=submission.url.encode('utf8')
+           title=submission.title.encode('utf-8'),
+           url=submission.url
         )
-        send_message(subber, "There's a new story for you!", message)
+        send_message.delay(subber, "There's a new story for you!", message)
