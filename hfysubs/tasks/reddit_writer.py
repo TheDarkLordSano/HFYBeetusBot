@@ -12,6 +12,13 @@ logger = get_task_logger(__name__)
 
 @app.task(bind=True, max_retries=3, rate_limit=config.WRITE_POST_RATE_LIMIT, base=RedditTask)
 def write_post(self, parent_id, post, author_name):
+    """
+
+    :type self: RedditTask
+    :type parent_id: str
+    :type post: str
+    :type author_name: str
+    """
     try:
         submission = write_post.reddit.submission(id=parent_id)
         added = submission.reply(post)
@@ -24,14 +31,22 @@ def write_post(self, parent_id, post, author_name):
 
 @app.task(bind=True, max_retries=3, rate_limit=config.WRITE_PM_RATE_LIMIT, base=RedditTask)
 def send_message(self, recipient, subject, message):
-    #print "Attempting to send message to: ", recipient
+    """
+
+    :type self: RedditTask
+    :type recipient: str
+    :type subject: str
+    :type message: str
+    """
+
+    #logger("Attempting to send message to: ", recipient)
     try:
         logger.info("sending message to %s" % recipient)
         send_message.reddit.redditor(recipient).message(subject, message)
     except praw.exceptions.APIException as exc:
         if hasattr(exc, "error_type") and exc.error_type == 'InvalidUser':
             logger.info("User %s doesn't exist anymore, removing from list!" % recipient)
-            # catch incase user subscribes and then deletes the account.
+            # catch in case user subscribes and then deletes the account.
             config.clear_subscriptions(recipient)
         elif hasattr(exc, "error_type") and exc.error_type == 'RATELIMIT':
             logger.warn("503 error or something, retrying")

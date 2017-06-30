@@ -68,7 +68,6 @@ def construct_pm(author, action, users, subscriptions):
 
     :rtype: str
     """
-
     subscriptions = [subscription[0] for subscription in subscriptions]
     if len(subscriptions) >= 1:
         subscriptions[0] = "* /u/" + subscriptions[0]
