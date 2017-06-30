@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from collections import namedtuple
 
 from celery.utils.log import get_task_logger
 
@@ -10,38 +11,64 @@ from ..util import filter_post
 logger = get_task_logger(__name__)
 
 
+SerializableSubmission = namedtuple("SerializableSubmission", ["submissionId", "author", "title", "url"])
+
+
 @app.task(base=RedditTask)
-def process_submission(submission):
-    submissions = process_submission.reddit.redditor(submission.author.name).submissions.new(limit=20)
+def process_submission(_submission):
+    # Ensure we are working with a correctly deserialized SerializableSubmission
+    # a named tuple gets serialized in JSON as an array, which means we can reconstruct our
+    # named tuple by exploding it into the named tuples constructor
+    # If this method is called directly, then the named tuple will be exploded into the constructor
+    # which while not idea, will also not cause an issue
+    """
+
+    :type _submission: SerializableSubmission | (str, str, str, str)
+    """
+    submission = SerializableSubmission(*_submission)
+
+    submissions = process_submission.reddit.redditor(submission.author).submissions.new(limit=20)
     all_stories = [post for post in submissions if filter_post(post)]
 
-    logger.info("%s has %d stories" % (submission.author.name, len(all_stories)))
+    logger.info("%s has %d stories" % (submission.author, len(all_stories)))
 
     if len(all_stories) <= 0:
         logger.info("User only has one story, not posting!")
         return
 
     for story in all_stories:
-        previous_id = config.get_post_in_thread(story.id)  #checks if the story is already in the 'repliedto' database.
+        # checks if the story is already in the 'repliedto' database.
+        previous_id = config.get_post_in_thread(story.id)
 
-        if not previous_id:   #If the story is not in the 'repliedto' database
-            if story.id == submission.id:  #Is the place in the loop we are at the story that started this?
-                queue_notifications(submission)  #Time to send people the notification.
-				
-            post = config.POST_CONTENT.format(username=submission.author.name)  
-            write_post.delay(story.id, post, submission.author.name)  #submit a reply on the story, write_post adds story to 'repliedto' database
+        # If the story is not in the 'repliedto' database
+        if not previous_id:
+            # Is the place in the loop we are at the story that started this?
+            if story.id == submission.submissionId:
+                # Time to send people the notification.
+                queue_notifications(submission)
+
+            post = config.POST_CONTENT.format(username=submission.author.name)
+            # submit a reply on the story, write_post adds story to 'repliedto' database
+            write_post.delay(story.id, post, submission.author.name)
 
 
 @app.task
-def queue_notifications(submission):
+def queue_notifications(_submission):
+    """
+
+    :type _submission: SerializableSubmission | (str, str, str, str)
+    """
+    submission = SerializableSubmission(*_submission)
+
     subscribers = config.get_subscribers(submission.author)
 
     for subscriber in subscribers:
-	subber = subscriber[0]  #this is to get rid of the tuple
+        # this is to get rid of the tuple
+        subber = subscriber[0]
         message = config.NEW_STORY_CONTENT.format(
-           username=subber,
-           writer=submission.author,
-           title=submission.title.encode('utf-8'),
-           url=submission.url
+            username=subber,
+            writer=submission.author,
+            title=submission.title,
+            url=submission.url
         )
         send_message.delay(subber, "There's a new story for you!", message)

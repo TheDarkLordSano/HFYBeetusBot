@@ -1,5 +1,9 @@
 from beetusbot import config
 
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
+
 
 def filter_post(post):
     if post.subreddit.display_name.lower() != config.SUBREDDIT.lower():

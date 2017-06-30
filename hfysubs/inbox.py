@@ -17,10 +17,12 @@ def extract_users(message):
 
 
 def handle_inbox_stream():
-    for message in make_reddit().inbox.stream():
+    reddit = make_reddit()
+
+    for message in reddit.inbox.stream():
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
             for user in extract_users(message.body):
-                print("Removing subscription from %s to %s" % (user, message.author))
+                logger("Removing subscription from %s to %s" % (user, message.author))
                 config.remove_subscription(user, message.author)
 
             send_message.delay(
@@ -33,7 +35,7 @@ def handle_inbox_stream():
                 if user.lower() == 'u':
                     continue
                 else:
-                    print("Added subscription from %s to %s" % (user, message.author))
+                    logger("Added subscription from %s to %s" % (user, message.author))
                     config.add_subscription(user, message.author)
 
             send_message.delay(
@@ -46,6 +48,13 @@ def handle_inbox_stream():
 
 
 def construct_pm(author, subscriptions):
+    """
+    :type author: str
+    :type subscriptions: (str)[]
+
+    :rtype: str
+    """
+
     subscriptions = [subscription[0] for subscription in subscriptions]
     if len(subscriptions) >= 1:
         subscriptions[0] = "* /u/" + subscriptions[0]
