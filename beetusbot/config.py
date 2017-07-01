@@ -27,9 +27,12 @@ Your messages are getting through. The script that checks the inbox has to be ma
 """
 
 SUBSCRIPTION_CONTENT = """
-Hello there {username}! You are now subscribed to the following users:
+Hello there {username}!
 
-{text}
+You have been {action} {users}
+
+Your current subscriptions are now:
+{subscriptions}
 
 _____
 ^(To unsubscribe to any of these users, send a message that contains the word unsubscribe and a list of users, for example: unsubscribe /u/username /u/username2)

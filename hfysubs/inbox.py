@@ -21,17 +21,24 @@ def handle_inbox_stream():
 
     for message in reddit.inbox.stream():
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
-            for user in extract_users(message.body):
+            users = extract_users(message.body)
+            for user in users:
                 logger("Removing subscription from %s to %s" % (user, message.author))
                 config.remove_subscription(user, message.author)
 
             send_message.delay(
                 str(message.author),
                 "Your Current Subscriptions",
-                construct_pm(message.author, config.get_subscriptions(message.author))
+                construct_pm(
+                    message.author,
+                    "unsubscribed from",
+                    users,
+                    config.get_subscriptions(message.author)
+                )
             )
         elif "subscribe" in message.body.lower() or "subscribe" in message.subject.lower():
-            for user in extract_users(message.body):
+            users = extract_users(message.body)
+            for user in users:
                 if user.lower() == 'u':
                     continue
                 else:
@@ -41,20 +48,26 @@ def handle_inbox_stream():
             send_message.delay(
                 str(message.author),
                 "Your Current Subscriptions",
-                construct_pm(message.author, config.get_subscriptions(message.author))
+                construct_pm(
+                    message.author,
+                    "subscribed to",
+                    users,
+                    config.get_subscriptions(message.author)
+                )
             )
 
         message.mark_read()
 
 
-def construct_pm(author, subscriptions):
+def construct_pm(author, action, users, subscriptions):
     """
     :type author: str
+    :type action: str
+    :type users: str[]
     :type subscriptions: (str)[]
 
     :rtype: str
     """
-
     subscriptions = [subscription[0] for subscription in subscriptions]
     if len(subscriptions) >= 1:
         subscriptions[0] = "* /u/" + subscriptions[0]
@@ -62,10 +75,14 @@ def construct_pm(author, subscriptions):
 
         return config.SUBSCRIPTION_CONTENT.format(
             username=author,
-            text=userlist
+            action=action,
+            users=' '.join(users),
+            subscriptions=userlist
         )
     else:
         return config.SUBSCRIPTION_CONTENT.format(
             username=author,
-            text="You don't have any subscriptions"
+            action=action,
+            users=' '.join(users),
+            subscriptions="You don't have any subscriptions"
         )
