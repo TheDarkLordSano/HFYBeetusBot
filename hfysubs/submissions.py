@@ -23,3 +23,6 @@ def handle_subscription_stream():
             )
 
             process_submission(serializable_sub)
+		except PrawcoreException
+			logger.exception('run loop')
+			time.sleep(20)
