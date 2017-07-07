@@ -23,7 +23,7 @@ def handle_inbox_stream():
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
             users = extract_users(message.body)
             for user in users:
-                logger("Removing subscription from %s to %s" % (user, message.author))
+                logger.info("Removing subscription from %s to %s" % (user, message.author))
                 config.remove_subscription(user, message.author)
 
             send_message.delay(
@@ -42,7 +42,7 @@ def handle_inbox_stream():
                 if user.lower() == 'u':
                     continue
                 else:
-                    logger("Added subscription from %s to %s" % (user, message.author))
+                    logger.info("Added subscription from %s to %s" % (user, message.author))
                     config.add_subscription(user, message.author)
 
             send_message.delay(
