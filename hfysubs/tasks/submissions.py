@@ -7,6 +7,8 @@ from beetusbot import config
 from .reddit_writer import send_message, write_post
 from ..celery import app, RedditTask
 from ..util import filter_post
+from .models.repto import repliedto
+from .models.subs import Subscriptions
 
 logger = get_task_logger(__name__)
 
@@ -33,15 +35,14 @@ def process_submission(_submission):
     logger.info("%s has %d stories" % (submission.author, len(all_stories)))
 
     if len(all_stories) <= 0:
-        logger.info("User only has one story, not posting!")
+        logger.info("User only has No stories? Weird.")
         return
 
-    for story in all_stories:
-        # checks if the story is already in the 'repliedto' database.
-        previous_id = config.get_post_in_thread(story.id)
+    qlist = list(repliedto.objects.filter(author=submission.author).values_list("reddit_id", flat=True))
 
+    for story in all_stories:
         # If the story is not in the 'repliedto' database
-        if not previous_id:
+        if previous_id not in qlist:
             # Is the place in the loop we are at the story that started this?
             if story.id == submission.submissionId:
                 # Time to send people the notification.
@@ -60,7 +61,7 @@ def queue_notifications(_submission):
     """
     submission = SerializableSubmission(*_submission)
 
-    subscribers = config.get_subscribers(submission.author)
+    subscribers = list(Subscriptions.objects.filter(subcribed_to=submission.author).values_list("subscriber", flat=True))
 
     for subscriber in subscribers:
         # this is to get rid of the tuple

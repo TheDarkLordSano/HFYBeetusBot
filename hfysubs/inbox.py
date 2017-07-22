@@ -6,6 +6,8 @@ from celery.utils.log import get_task_logger
 from beetusbot import config
 from .reddit import make_reddit
 from .tasks.reddit_writer import send_message
+from .models.subs import Subscriptions
+from django.db import IntegrityError
 
 logger = get_task_logger(__name__)
 
@@ -24,7 +26,8 @@ def handle_inbox_stream():
             users = extract_users(message.body)
             for user in users:
                 logger.info("Removing subscription from %s to %s" % (user, message.author))
-                config.remove_subscription(user, message.author)
+		Subscriptions.objects.filter(subscribed_to__iexact=user, subscriber=message.author).delete()
+
 
             send_message.delay(
                 str(message.author),
@@ -43,7 +46,12 @@ def handle_inbox_stream():
                     continue
                 else:
                     logger.info("Added subscription from %s to %s" % (user, message.author))
-                    config.add_subscription(user, message.author)
+		    try:
+			Subscriptions.create(subscriber=message.author, subscribed_to=user)
+		    except IntegrityError as e:
+		        if 'unique constraint' in e.args[0]:
+			    logger.info("Subscription does not exist")
+			    continue
 
             send_message.delay(
                 str(message.author),
@@ -52,14 +60,18 @@ def handle_inbox_stream():
                     message.author,
                     "subscribed to",
                     users,
-                    config.get_subscriptions(message.author)
+                    list(Subscriptions.filter(subscriber=message.author).values_list("subscribed_to",flat=True))
                 )
+
             )
 
         message.mark_read()
+'''
+  values_list returns the given model field(s). Flat being true turns this into a list.
+  Flat CANNNOT be used with multiple fields.
+'''
 
-
-def construct_pm(author, action, users, subscriptions):
+def construct_pm(author, action, users, sublist):
     """
     :type author: str
     :type action: str
@@ -67,11 +79,11 @@ def construct_pm(author, action, users, subscriptions):
     :type subscriptions: (str)[]
 
     :rtype: str
-    """
     subscriptions = [subscription[0] for subscription in subscriptions]
-    if len(subscriptions) >= 1:
-        subscriptions[0] = "* /u/" + subscriptions[0]
-        userlist = "\n\n* /u/".join(subscriptions)
+    """
+    if len(sublist) >= 1:
+        sublist[0] = "* /u/" + sublist[0]
+        userlist = "\n\n* /u/".join(sublist)
 
         return config.SUBSCRIPTION_CONTENT.format(
             username=author,

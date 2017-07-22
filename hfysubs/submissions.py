@@ -5,6 +5,7 @@ from beetusbot import config
 from .tasks import process_submission, SerializableSubmission
 from .util import filter_post
 from prawcore.exceptions import PrawcoreException
+from .models.repto import repliedto
 
 import praw.exceptions
 
@@ -14,7 +15,7 @@ def handle_subscription_stream():
     for submission in subreddit.stream.submissions():
 	try:
             # checks if the story/submission is already in the 'repliedto' database.
-            previous_id = config.get_post_in_thread(submission.id)
+            previous_id = repliedto.objects.filter(submission.id).exists()
             # author may be None when a user deletes itself as author right away
             if (not previous_id) and filter_post(submission) and submission.author is not None:
                 # Convert the submission into something we can be sure will get serialized properly

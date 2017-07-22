@@ -3,7 +3,8 @@ from __future__ import absolute_import, unicode_literals
 from celery.utils.log import get_task_logger
 import requests.exceptions
 import praw
-
+from ..models.subs import Subscriptions
+from ..models.repto import repliedto
 from beetusbot import config
 from ..celery import app, RedditTask
 
@@ -22,7 +23,7 @@ def write_post(self, parent_id, post, author_name):
     try:
         submission = write_post.reddit.submission(id=parent_id)
         added = submission.reply(post)
-        config.add_post(parent_id, author_name, added.id)
+		repliedto.objects.create(reddit_id=parent_id, author=author_name, replied_id=added.id)
     except (praw.exceptions.APIException, requests.exceptions.HTTPError) as exc:
         if hasattr(exc, "error_type") and exc.error_type == 'TOO_OLD':
             return
@@ -39,7 +40,6 @@ def send_message(self, recipient, subject, message):
     :type message: str
     """
 
-    #logger("Attempting to send message to: ", recipient)
     try:
         logger.info("sending message to %s" % recipient)
         send_message.reddit.redditor(recipient).message(subject, message)
@@ -47,7 +47,7 @@ def send_message(self, recipient, subject, message):
         if hasattr(exc, "error_type") and exc.error_type == 'InvalidUser':
             logger.info("User %s doesn't exist anymore, removing from list!" % recipient)
             # catch in case user subscribes and then deletes the account.
-            config.clear_subscriptions(recipient)
+            Subscriptions.objects.filter(subscriber=recipient).delete()
         elif hasattr(exc, "error_type") and exc.error_type == 'RATELIMIT':
             logger.warn("503 error or something, retrying")
             self.retry(exc=exc)
