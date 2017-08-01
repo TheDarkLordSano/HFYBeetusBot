@@ -1,5 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
+import sys, os, django
+sys.path.append("/home/pi/HFYDB")
+os.environ["DJANGO_SETTINGS_MODULE"] = "HFYDB.settings"
+django.setup()
+
 from celery.utils.log import get_task_logger
 import requests.exceptions
 import praw
@@ -20,10 +25,12 @@ def write_post(self, parent_id, post, author_name):
     :type post: str
     :type author_name: str
     """
+    if(repliedto.objects.filter(reddit_id=parent_id).exists()):
+        return
     try:
         submission = write_post.reddit.submission(id=parent_id)
         added = submission.reply(post)
-		repliedto.objects.create(reddit_id=parent_id, author=author_name, replied_id=added.id)
+        repliedto.objects.create(reddit_id=parent_id, author=author_name, replied_id=added.id)
     except (praw.exceptions.APIException, requests.exceptions.HTTPError) as exc:
         if hasattr(exc, "error_type") and exc.error_type == 'TOO_OLD':
             return

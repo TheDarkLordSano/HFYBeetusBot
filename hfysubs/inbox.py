@@ -1,6 +1,11 @@
 from __future__ import absolute_import
 import re
 
+import sys, os, django
+sys.path.append("/home/pi/HFYDB")
+os.environ["DJANGO_SETTINGS_MODULE"] = "HFYDB.settings"
+django.setup()
+
 from celery.utils.log import get_task_logger
 
 from beetusbot import config
@@ -47,7 +52,7 @@ def handle_inbox_stream():
                 else:
                     logger.info("Added subscription from %s to %s" % (user, message.author))
 		    try:
-			Subscriptions.create(subscriber=message.author, subscribed_to=user)
+			Subscriptions.objects.create(subscriber=message.author, subscribed_to=user)
 		    except IntegrityError as e:
 		        if 'unique constraint' in e.args[0]:
 			    logger.info("Subscription does not exist")
