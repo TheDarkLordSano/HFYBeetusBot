@@ -53,7 +53,7 @@ def process_submission(_submission):
                 # Time to send people the notification.
                 queue_notifications(submission)
 
-            post = config.POST_CONTENT.format(username=submission.author)
+            post = config.POST_CONTENT.format(username=submission.author.replace("_", "\_").replace("-", "\-"))
             # submit a reply on the story, write_post adds story to 'repliedto' database
             # write_post Should not be .delay in this instance. By not sending it to celery queue the main process,
             # which searches for new stories, pauses to post on the submission while the messages of a new post are being sent out
@@ -72,11 +72,9 @@ def queue_notifications(_submission):
     subscribers = list(Subscriptions.objects.filter(subscribed_to__iexact=submission.author).values_list("subscriber", flat=True))
 
     for subscriber in subscribers:
-        # this is to get rid of the tuple
-        #subber = subscriber
         message = config.NEW_STORY_CONTENT.format(
             username=subscriber,
-            writer=submission.author,
+            writer=submission.author.replace("_", "\_").replace("-", "\-"),
             title=submission.title,
             url=submission.url
         )

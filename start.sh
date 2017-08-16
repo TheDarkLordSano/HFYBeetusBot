@@ -30,11 +30,14 @@ function runStreamHandler(){
 	logpython $DIR/main.py
 }
 function runCelery(){
-	celery multi start 5 -A hfysubs -l info --logfile=$DIR/beetuslog/celery_%n%I.log
+	celery multi start 3 -A hfysubs -l info --logfile=$DIR/beetuslog/celery_%n%I.log
 }
 function runStreamAndCelery(){
 	runStreamHandler
 	runCelery
+}
+function inboxhack(){
+	logpython $DIR/mainhack.py
 }
 
 # read the first argument to see if user already made up his mind
@@ -49,6 +52,10 @@ then
 elif [ "$1" = "both" ]
 then
 	runStreamAndCelery
+	exit 1
+elif [ "$1" = "hack" ]
+then
+	inboxhack
 	exit 1
 fi
 
@@ -74,6 +81,10 @@ do
 			break
             ;;
         $option_4)
+			inboxhack
+			break
+            ;;
+        $option_5)
             break
             ;;
         *) echo invalid option;;
